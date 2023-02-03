@@ -37,6 +37,7 @@ package com.qy.javassist.bytecode;
 import com.qy.javassist.utils.JavassistUtils;
 import javassist.CtClass;
 import javassist.CtField;
+import javassist.CtMethod;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.AnnotationMemberValue;
@@ -297,6 +298,10 @@ public class CtAnnotationBuilder implements Builder<Annotation> {
 
 	public void markClass(CtClass clazz) {
 		JavassistUtils.addClassAnnotation(clazz, annotation);
+	}
+
+	public void markMethod(CtMethod method) {
+		JavassistUtils.addMethodAnnotation(method,annotation);
 	}
 
 	public void markField(CtField field) {

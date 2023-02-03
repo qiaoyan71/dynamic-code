@@ -16,6 +16,7 @@
 package com.qy.javassist.utils;
 
 import com.qy.javassist.bytecode.visit.ArrayIndexAssigningVisitor;
+import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
@@ -65,7 +66,11 @@ public class JavassistUtils {
 
 	protected static Logger LOG = LoggerFactory.getLogger(JavassistUtils.class);
 	protected static ConcurrentMap<String, Class<?>> COMPLIED_CLASSES = new ConcurrentHashMap<String, Class<?>>();
-	
+
+	public static void addClassMethod(CtClass clazz, CtMethod ctMethod) throws CannotCompileException {
+		clazz.addMethod(ctMethod);
+	}
+
 	public static void addClassAnnotation(CtClass clazz, Annotation annotation) {
 		ClassFile classFile = clazz.getClassFile();
 		AnnotationsAttribute attribute = getClassAnnotationsAttribute(clazz);
@@ -78,6 +83,13 @@ public class JavassistUtils {
 		AnnotationsAttribute attribute = getFieldAnnotationsAttribute(field);
 		attribute.addAnnotation(annotation);
 		fieldInfo.addAttribute(attribute);
+	}
+
+	public static void addMethodAnnotation(CtMethod method, Annotation annotation) {
+		MethodInfo methodInfo = method.getMethodInfo();
+		AnnotationsAttribute attribute = getMethodAnnotationsAttribute(method);
+		attribute.addAnnotation(annotation);
+		methodInfo.addAttribute(attribute);
 	}
 
 	public static void addSignature(CtField field, String signature) {
@@ -382,7 +394,7 @@ public class JavassistUtils {
 	public static CtClass getCtClass(Class<?> clazz) throws NotFoundException {
 		return getCtClass(clazz.getName());
 	}
-	
+
 	public static CtClass getCtClass(String classname) throws NotFoundException {
 		// 用于取得字节码类，必须在当前的classpath中，使用全称
 		ClassPool pool = ClassPoolFactory.getDefaultPool();
@@ -401,7 +413,23 @@ public class JavassistUtils {
 		}
 		return cc;
 	}
-	
+
+	public static CtClass[] getCtClass(Class<?>[] clazzs) throws NotFoundException {
+		CtClass[] cts = new CtClass[clazzs.length];
+		for (int i = 0; i < clazzs.length; i++) {
+			cts[i] = getCtClass(clazzs[i]);
+		}
+		return cts;
+	}
+
+	public static CtClass[] getCtClass(String[] clazzs) throws NotFoundException {
+		CtClass[] cts = new CtClass[clazzs.length];
+		for (int i = 0; i < clazzs.length; i++) {
+			cts[i] = getCtClass(clazzs[i]);
+		}
+		return cts;
+	}
+
 	/**
 	 * <p>从指定的对象类型根据方法名称获取对应的CtMethod对象</p>
 	 * <p>特别注意：Spring框架中如果是代理对象请使用如下代码：</p>
@@ -527,6 +555,15 @@ public class JavassistUtils {
 		return null;
 	}
 	
+	public static AnnotationsAttribute getMethodAnnotationsAttribute(final CtMethod method) {
+		MethodInfo methodInfo = method.getMethodInfo();
+		AnnotationsAttribute attribute = (AnnotationsAttribute) methodInfo.getAttribute(AnnotationsAttribute.visibleTag);
+		if (attribute == null) {
+			attribute = new AnnotationsAttribute(methodInfo.getConstPool(), AnnotationsAttribute.visibleTag);
+		}
+		return attribute;
+	}
+
 	public static AnnotationsAttribute getFieldAnnotationsAttribute(final CtField field) {
 		FieldInfo fieldInfo = field.getFieldInfo();
 		AnnotationsAttribute attribute = (AnnotationsAttribute) fieldInfo.getAttribute(AnnotationsAttribute.visibleTag);
@@ -535,7 +572,7 @@ public class JavassistUtils {
 		}
 		return attribute;
 	}
-	
+
 	/**
 	 * <p>从指定的对象类型根据方法名称获取方法参数名称，匹配同名的某一个方法</p>
 	 * <p>特别注意：Spring框架中如果是代理对象请使用如下代码：</p>

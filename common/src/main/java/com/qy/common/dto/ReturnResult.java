@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
+ * 返回结果
  * 返回结果处理类
  *
  * @author qinhuiwei
